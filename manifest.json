@@ -1,0 +1,24 @@
+{
+  "name": "Daiane Stefani - Studio & Beauty",
+  "short_name": "Daiane Stefani",
+  "description": "Agendamento online e gestão para o Studio Daiane Stefani. Maquiagem, Sobrancelhas e Extensão de Cílios.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#feebd6",
+  "theme_color": "#610002",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "beauty",
+    "lifestyle",
+    "productivity"
+  ]
+}

@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#610002">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Daiane Stefani">
+  <meta name="apple-mobile-web-app-title" content="Daiane Stefani">
+  <meta name="description" content="Agendamento online e gestão para Daiane Stefani - Studio & Beauty. Maquiagem, Sobrancelhas e Extensão de Cílios de Terça a Sábado das 09h às 17h30.">
+
+  <title>Daiane Stefani - Studio &amp; Beauty | Agendamento Online</title>
+
+  <!-- PWA Manifest & Ícones -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
+  <link rel="apple-touch-icon" href="./assets/icon.svg">
+
+  <!-- Estilos Globais -->
+  <link rel="stylesheet" href="./css/styles.css">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
+
+  <!-- ==============================================================================
+       HEADER GLOBAL
+       ============================================================================== -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="javascript:void(0)" class="brand-wrap" onclick="window.DAIANE_APP.switchView('booking')" title="Página Inicial de Agendamento">
+        <img src="./assets/logo.svg" alt="Daiane Stefani - Studio & Beauty" class="brand-logo-img">
+      </a>
+
+      <div class="header-actions">
+        <span id="headerAdminBadge" class="header-admin-pill" style="display: none;">
+          🔒 Modo Daiane
+        </span>
+        <button type="button" class="btn-toggle-view" id="viewToggleBtn" onclick="window.DAIANE_APP.toggleView()">
+          <span id="viewToggleIcon">✨</span>
+          <span id="viewToggleLabel">Painel da Daiane</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==============================================================================
+       CONTEÚDO PRINCIPAL
+       ============================================================================== -->
+  <main class="main-wrapper">
+
+    <!-- ==========================================================================
+         VISÃO 1: FLUXO DO CLIENTE (PÁGINA PÚBLICA DE AGENDAMENTO)
+         ========================================================================== -->
+    <section id="clientBookingView" class="view-section active">
+
+      <!-- Hero Banner com a Foto Oficial da Daiane Stefani -->
+      <div class="hero-banner">
+        <div class="hero-profile-container">
+          <div class="profile-avatar-wrapper">
+            <img src="./assets/daiane.jpg" alt="Daiane Stefani - Maquiadora & Lash Designer" class="profile-avatar-img">
+            <span class="profile-badge-pro">Oficial</span>
+          </div>
+
+          <div class="hero-badge-tag">
+            <span>Studio &amp; Beauty</span>
+          </div>
+
+          <h1 class="hero-title">Realçando sua beleza com <span>sofisticação</span></h1>
+          <p class="hero-subtitle">
+            Agendamento online prático e exclusivo com a profissional Daiane Stefani. Escolha seu atendimento, data e horário ideais.
+          </p>
+
+          <div class="hero-hours-pill">
+            <span>📅 Terça a Sábado: <strong>09:00 às 17:30</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulário de Agendamento em Etapas -->
+      <form id="bookingForm" novalidate>
+
+        <!-- ETAPA 1: SEUS DADOS DE CONTATO -->
+        <div class="form-step-card">
+          <div class="step-card-header">
+            <div class="step-number-circle">1</div>
+            <div>
+              <h2 class="step-card-title">Seus Dados de Contato</h2>
+              <p class="step-card-desc">Informe seu nome e WhatsApp para confirmação do atendimento</p>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="clienteNome" class="form-label">Nome Completo <span class="req">*</span></label>
+              <input type="text" id="clienteNome" class="form-input" placeholder="Ex: Camila Rodrigues" required autocomplete="name">
+            </div>
+
+            <div class="form-group">
+              <label for="clienteTelefone" class="form-label">WhatsApp com DDD <span class="req">*</span></label>
+              <input type="tel" id="clienteTelefone" class="form-input" placeholder="(11) 98765-4321" required autocomplete="tel" maxlength="15">
+            </div>
+          </div>
+        </div>
+
+        <!-- ETAPA 2: ESCOLHA DO SERVIÇO -->
+        <div class="form-step-card">
+          <div class="step-card-header">
+            <div class="step-number-circle">2</div>
+            <div>
+              <h2 class="step-card-title">Escolha o Serviço</h2>
+              <p class="step-card-desc">Selecione o procedimento que deseja realizar com a Daiane</p>
+            </div>
+          </div>
+
+          <!-- Cards Dinâmicos de Serviços -->
+          <div id="servicesList" class="services-grid">
+            <!-- Renderizado dinamicamente via booking.js -->
+          </div>
+        </div>
+
+        <!-- ETAPA 3: ESCOLHA DA DATA -->
+        <div class="form-step-card">
+          <div class="step-card-header">
+            <div class="step-number-circle">3</div>
+            <div>
+              <h2 class="step-card-title">Selecione a Data</h2>
+              <p class="step-card-desc">Atendimento de Terça a Sábado (Domingos e Segundas fechados)</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="bookingDate" class="form-label">Data do Atendimento <span class="req">*</span></label>
+            <input type="date" id="bookingDate" class="form-input" required>
+            <div id="bookingDateHelp" class="form-help-text"></div>
+          </div>
+        </div>
+
+        <!-- ETAPA 4: ESCOLHA DO HORÁRIO -->
+        <div class="form-step-card">
+          <div class="step-card-header">
+            <div class="step-number-circle">4</div>
+            <div>
+              <h2 class="step-card-title">Selecione o Horário</h2>
+              <p class="step-card-desc">Horários com intervalo de 30 minutos em tempo real</p>
+            </div>
+          </div>
+
+          <div class="slots-header-meta">
+            <div id="slotsMessage" class="slots-message">Selecione uma data para ver os horários.</div>
+          </div>
+
+          <div id="slotsContainer" class="slots-grid">
+            <!-- Renderizado dinamicamente via booking.js -->
+          </div>
+        </div>
+
+        <!-- RESUMO PRÉ-CONFIRMAÇÃO -->
+        <div id="bookingSummaryPill" class="summary-pill-container" style="display: none;">
+          <!-- Atualizado dinamicamente via booking.js -->
+        </div>
+
+        <!-- BOTÃO DE AÇÃO PRINCIPAL (CTA AZUL #0059cc) -->
+        <button type="submit" id="btnSubmitBooking" class="btn-cta-submit">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Confirmar Agendamento</span>
+        </button>
+
+      </form>
+
+      <!-- ========================================================================
+           SEÇÃO DE PORTFÓLIO (RODAPÉ / GALERIA DE TRABALHOS: 9:16, 4:3, 1:1)
+           ======================================================================== -->
+      <section class="portfolio-section-block" id="portfolioSection">
+        <div class="portfolio-header">
+          <h2>Portfólio de Trabalhos</h2>
+          <p>Inspire-se com produções reais em maquiagens sofisticadas, design de sobrancelhas e extensões de cílios.</p>
+        </div>
+
+        <!-- Filtros por Categoria -->
+        <div class="portfolio-filters-wrap">
+          <button type="button" class="portfolio-filter-btn active" data-cat="todos">✨ Todos</button>
+          <button type="button" class="portfolio-filter-btn" data-cat="maquiagem">💄 Maquiagem</button>
+          <button type="button" class="portfolio-filter-btn" data-cat="sobrancelhas">👁️ Sobrancelhas</button>
+          <button type="button" class="portfolio-filter-btn" data-cat="cilios">✨ Cílios</button>
+        </div>
+
+        <!-- Grade Responsiva de Imagens -->
+        <div id="portfolioGrid" class="portfolio-grid">
+          <!-- Renderizado via portfolio.js -->
+        </div>
+      </section>
+
+    </section>
+
+    <!-- ==========================================================================
+         VISÃO 2: ÁREA ADMINISTRATIVA (PAINEL DA DAIANE - /admin)
+         ========================================================================== -->
+    <section id="adminView" class="view-section">
+
+      <!-- Login Card (Exibido quando não logada) -->
+      <div id="adminLoginCard" class="admin-login-box">
+        <div class="admin-login-avatar">
+          <img src="./assets/daiane.jpg" alt="Daiane Stefani">
+        </div>
+        <h2 class="admin-login-title">Acesso Restrito</h2>
+        <p class="admin-login-desc">Painel exclusivo da profissional Daiane Stefani</p>
+
+        <div id="adminLoginError" class="admin-error-box"></div>
+
+        <form id="adminLoginForm">
+          <div class="form-group" style="text-align: left; margin-bottom: 1rem;">
+            <label for="adminUsername" class="form-label">Usuário</label>
+            <input type="text" id="adminUsername" class="form-input" placeholder="daiane" required autocomplete="username" value="daiane">
+          </div>
+
+          <div class="form-group" style="text-align: left; margin-bottom: 1.5rem;">
+            <label for="adminPassword" class="form-label">Senha</label>
+            <input type="password" id="adminPassword" class="form-input" placeholder="••••••••" required autocomplete="current-password" value="Daiane123">
+          </div>
+
+          <button type="submit" class="btn-cta-submit" style="width: 100%;">
+            <span>Entrar no Painel</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Painel Principal Administrativo (Exibido após login) -->
+      <div id="adminDashboardPanel" style="display: none;">
+
+        <div class="admin-panel-header">
+          <div class="admin-panel-title-wrap">
+            <h2>Gestão do Studio</h2>
+            <p>Olá Daiane! Acompanhe sua agenda, faturamento e clientes em tempo real.</p>
+          </div>
+
+          <div class="admin-header-actions">
+            <button type="button" id="btnOpenManualBookingModal" class="btn-admin-action btn-admin-primary">
+              <span>+ Novo Encaixe</span>
+            </button>
+            <button type="button" id="btnOpenSettingsModal" class="btn-admin-action btn-admin-secondary" title="Configurar Supabase">
+              <span>⚙️ Supabase</span>
+            </button>
+            <button type="button" id="adminLogoutBtn" class="btn-admin-action btn-admin-secondary">
+              <span>Sair</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Abas de Navegação -->
+        <nav class="admin-tabs-nav">
+          <button type="button" class="admin-nav-btn active" data-tab="agenda">📅 Agenda do Dia</button>
+          <button type="button" class="admin-nav-btn" data-tab="precos">💰 Ajustar Preços</button>
+          <button type="button" class="admin-nav-btn" data-tab="dashboard">📊 Relatórios Financeiros</button>
+          <button type="button" class="admin-nav-btn" data-tab="portfolio">🖼️ Portfólio</button>
+        </nav>
+
+        <!-- ABA 1: AGENDA DO DIA -->
+        <div id="tab-agenda" class="admin-tab-section active">
+          <div class="admin-agenda-filters">
+            <div class="agenda-inputs-row">
+              <div class="form-group" style="margin: 0;">
+                <label for="adminAgendaDate" class="form-label">Data da Agenda</label>
+                <input type="date" id="adminAgendaDate" class="form-input" style="padding: 0.6rem 0.9rem;">
+              </div>
+
+              <div class="form-group" style="margin: 0;">
+                <label for="adminAgendaStatusFilter" class="form-label">Status</label>
+                <select id="adminAgendaStatusFilter" class="form-select" style="padding: 0.6rem 0.9rem;">
+                  <option value="todos">Todos os Status</option>
+                  <option value="agendado">Apenas Agendados</option>
+                  <option value="concluido">Apenas Concluídos</option>
+                  <option value="cancelado">Cancelados</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="adminAgendaCountBadge" class="header-admin-pill">
+              0 agendamentos
+            </div>
+          </div>
+
+          <div id="adminAgendaList" class="admin-agenda-list">
+            <!-- Renderizado dinamicamente via admin.js -->
+          </div>
+        </div>
+
+        <!-- ABA 2: AJUSTE DINÂMICO DE VALORES -->
+        <div id="tab-precos" class="admin-tab-section">
+          <div class="form-step-card">
+            <div class="step-card-header">
+              <div class="step-number-circle">💰</div>
+              <div>
+                <h3 class="step-card-title">Tabela de Preços dos Serviços</h3>
+                <p class="step-card-desc">Atualize os valores padrão. As alterações são sincronizadas imediatamente na página de agendamento.</p>
+              </div>
+            </div>
+
+            <form id="adminPricesForm">
+              <div class="form-grid-2" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                <div class="form-group">
+                  <label for="priceMaquiagem" class="form-label">💄 Maquiagem Profissional (R$)</label>
+                  <input type="number" step="0.50" id="priceMaquiagem" class="form-input" required>
+                  <span class="form-help-text">Duração padrão: 30 min</span>
+                </div>
+
+                <div class="form-group">
+                  <label for="priceSobrancelhas" class="form-label">👁️ Design de Sobrancelhas (R$)</label>
+                  <input type="number" step="0.50" id="priceSobrancelhas" class="form-input" required>
+                  <span class="form-help-text">Duração padrão: 30 min</span>
+                </div>
+
+                <div class="form-group">
+                  <label for="priceCilios" class="form-label">✨ Extensão de Cílios (R$)</label>
+                  <input type="number" step="0.50" id="priceCilios" class="form-input" required>
+                  <span class="form-help-text">Duração padrão: 30 min</span>
+                </div>
+              </div>
+
+              <div style="margin-top: 1.5rem; text-align: right;">
+                <button type="submit" id="btnSavePrices" class="btn-cta-submit" style="width: auto; padding: 0.85rem 2rem; display: inline-flex;">
+                  <span>Salvar Novos Preços</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ABA 3: DASHBOARD E RELATÓRIOS FINANCEIROS -->
+        <div id="tab-dashboard" class="admin-tab-section">
+          <!-- Cards de KPI -->
+          <div class="kpi-cards-grid">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span>Faturamento Total</span>
+                <span class="kpi-icon">💰</span>
+              </div>
+              <div class="kpi-value" id="kpiFaturamentoTotal">R$ 0,00</div>
+              <div class="kpi-subtext">Receita de atendimentos concluídos</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span>Serviços Realizados</span>
+                <span class="kpi-icon">💄</span>
+              </div>
+              <div class="kpi-value" id="kpiServicosRealizados">0</div>
+              <div class="kpi-subtext">Clientes atendidas no período</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span>Ticket Médio</span>
+                <span class="kpi-icon">📈</span>
+              </div>
+              <div class="kpi-value" id="kpiTicketMedio">R$ 0,00</div>
+              <div class="kpi-subtext">Média por atendimento</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span>Receita Prevista</span>
+                <span class="kpi-icon">⏳</span>
+              </div>
+              <div class="kpi-value" id="kpiFaturamentoPrevisto">R$ 0,00</div>
+              <div class="kpi-subtext">Agendamentos a realizar</div>
+            </div>
+          </div>
+
+          <!-- Gráfico Interativo com Chart.js e Toggle de Modo -->
+          <div class="chart-box-card">
+            <div class="chart-box-header">
+              <div class="chart-title-wrap">
+                <h3>Desempenho Visual</h3>
+              </div>
+
+              <div class="chart-controls-group">
+                <!-- Toggle 1-Click: Faturamento vs Quantidade -->
+                <div class="chart-mode-toggle">
+                  <button type="button" id="toggleModeFaturamento" class="toggle-pill-btn active">
+                    💰 Faturamento (R$)
+                  </button>
+                  <button type="button" id="toggleModeAtendimentos" class="toggle-pill-btn">
+                    👥 Qtd Clientes
+                  </button>
+                </div>
+
+                <!-- Filtros de Período -->
+                <div class="chart-period-filters">
+                  <button type="button" class="chart-period-btn" data-period="dia">Dia</button>
+                  <button type="button" class="chart-period-btn" data-period="semana">Semana</button>
+                  <button type="button" class="chart-period-btn active" data-period="mes">Mês</button>
+                  <button type="button" class="chart-period-btn" data-period="ano">Ano</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-canvas-wrapper">
+              <canvas id="financeChartCanvas"></canvas>
+              <div id="nativeChartFallback" style="display: none;"></div>
+            </div>
+          </div>
+
+          <!-- Top 10 Clientes Frequentes -->
+          <div class="top-clients-card">
+            <div class="top-clients-header">
+              <h3>Top 10 Clientes Mais Frequentes</h3>
+              <p>Agrupamento por telefone identificando as clientes mais fiéis do Studio Daiane Stefani.</p>
+            </div>
+
+            <div class="table-responsive">
+              <table class="top-clients-table">
+                <thead>
+                  <tr>
+                    <th>Posição</th>
+                    <th>Cliente</th>
+                    <th>WhatsApp</th>
+                    <th>Visitas</th>
+                    <th>Total Investido</th>
+                  </tr>
+                </thead>
+                <tbody id="topClientsTableBody">
+                  <!-- Renderizado dinamicamente via admin.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA 4: GERENCIAR PORTFÓLIO -->
+        <div id="tab-portfolio" class="admin-tab-section">
+          <div class="form-step-card">
+            <div class="step-card-header" style="justify-content: space-between;">
+              <div>
+                <h3 class="step-card-title">Gerenciador de Portfólio</h3>
+                <p class="step-card-desc">Adicione ou remova fotos de trabalhos nos formatos 9:16, 4:3 ou 1:1.</p>
+              </div>
+              <button type="button" id="btnOpenPortfolioModal" class="btn-admin-action btn-admin-primary">
+                + Adicionar Trabalho
+              </button>
+            </div>
+
+            <div id="adminPortfolioGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+              <!-- Renderizado dinamicamente via admin.js -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==============================================================================
+       FOOTER
+       ============================================================================== -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div class="footer-brand">Daiane Stefani - Studio &amp; Beauty</div>
+      <div class="footer-links">
+        <span>📍 Atendimento com hora marcada</span>
+        <span>📱 WhatsApp: (32) 98456-1005</span>
+        <span>✨ Terça a Sábado das 09:00 às 17:30</span>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 Daiane Stefani - Studio &amp; Beauty. Todos os direitos reservados.
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==============================================================================
+       MODAIS DO SISTEMA
+       ============================================================================== -->
+
+  <!-- 1. Modal de Confirmação de Agendamento -->
+  <div id="confirmationModal" class="app-modal">
+    <div class="modal-content-card">
+      <button type="button" class="modal-close-btn" id="closeConfirmationBtn">&times;</button>
+      
+      <div class="confirmation-head">
+        <div class="conf-check-icon">✓</div>
+        <h3 class="conf-title">Agendamento Confirmado!</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.35rem;">
+          Seu horário foi reservado com sucesso com a Daiane Stefani.
+        </p>
+      </div>
+
+      <div class="conf-summary-box">
+        <div class="conf-row">
+          <span class="conf-row-lbl">Cliente</span>
+          <span class="conf-row-val" id="modalConfNome">--</span>
+        </div>
+        <div class="conf-row">
+          <span class="conf-row-lbl">Serviço</span>
+          <span class="conf-row-val" id="modalConfServico">--</span>
+        </div>
+        <div class="conf-row">
+          <span class="conf-row-lbl">Data</span>
+          <span class="conf-row-val" id="modalConfData">--</span>
+        </div>
+        <div class="conf-row">
+          <span class="conf-row-lbl">Horário</span>
+          <span class="conf-row-val" id="modalConfHorario">--</span>
+        </div>
+        <div class="conf-row">
+          <span class="conf-row-lbl">Valor</span>
+          <span class="conf-row-val text-wine" id="modalConfValor">--</span>
+        </div>
+      </div>
+
+      <div class="conf-actions-stack">
+        <button type="button" id="btnConfirmWhatsapp" class="btn-conf-action btn-conf-wa">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <span>Enviar Confirmação no WhatsApp</span>
+        </button>
+
+        <button type="button" id="btnGoogleCalendar" class="btn-conf-action btn-conf-gcal">
+          <span>📅 Adicionar ao Google Agenda</span>
+        </button>
+
+        <button type="button" id="btnDownloadIcs" class="btn-conf-action btn-conf-ics">
+          <span>📲 Baixar Calendário (.ics iPhone/PC)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Modal Lightbox de Zoom do Portfólio -->
+  <div id="portfolioLightbox" class="app-modal lightbox-modal">
+    <div class="modal-content-card">
+      <button type="button" class="modal-close-btn" id="closeLightboxBtn">&times;</button>
+      
+      <div class="lightbox-img-wrap">
+        <img id="lightboxImg" src="" alt="Trabalho Daiane Stefani">
+      </div>
+
+      <div class="lightbox-meta">
+        <div class="lightbox-header-row">
+          <span id="lightboxCategory" class="overlay-cat-badge"></span>
+          <span id="lightboxRatio" class="item-ratio-badge"></span>
+        </div>
+        <h3 id="lightboxTitle"></h3>
+        <p id="lightboxDesc" style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.35rem;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Modal de Agendamento Manual (Encaixe) -->
+  <div id="manualBookingModal" class="app-modal">
+    <div class="modal-content-card">
+      <button type="button" class="modal-close-btn" id="closeManualBookingBtn">&times;</button>
+      <h3 class="step-card-title" style="margin-bottom: 1rem;">Novo Encaixe / Agendamento Manual</h3>
+      
+      <form id="manualBookingForm">
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label for="manualNome" class="form-label">Nome da Cliente <span class="req">*</span></label>
+          <input type="text" id="manualNome" class="form-input" required placeholder="Nome e Sobrenome">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label for="manualTelefone" class="form-label">WhatsApp <span class="req">*</span></label>
+          <input type="tel" id="manualTelefone" class="form-input" required placeholder="(XX) XXXXX-XXXX">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label for="manualServico" class="form-label">Serviço <span class="req">*</span></label>
+          <select id="manualServico" class="form-select">
+            <option value="maquiagem">Maquiagem Profissional</option>
+            <option value="sobrancelhas">Design de Sobrancelhas</option>
+            <option value="cilios">Extensão de Cílios</option>
+          </select>
+        </div>
+
+        <div class="form-grid-2" style="margin-bottom: 0.85rem;">
+          <div class="form-group">
+            <label for="manualDate" class="form-label">Data <span class="req">*</span></label>
+            <input type="date" id="manualDate" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label for="manualHorario" class="form-label">Horário <span class="req">*</span></label>
+            <select id="manualHorario" class="form-select"></select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label for="manualValor" class="form-label">Valor Cobrado (R$) <span class="req">*</span></label>
+          <input type="number" step="0.50" id="manualValor" class="form-input" required>
+        </div>
+
+        <button type="submit" class="btn-cta-submit" style="width: 100%;">
+          <span>Salvar Encaixe</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Modal de Adicionar Item ao Portfólio -->
+  <div id="addPortfolioModal" class="app-modal">
+    <div class="modal-content-card">
+      <button type="button" class="modal-close-btn" id="closeAddPortfolioBtn">&times;</button>
+      <h3 class="step-card-title" style="margin-bottom: 1rem;">Adicionar Foto ao Portfólio</h3>
+
+      <form id="addPortfolioForm">
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label for="newPortTitulo" class="form-label">Título do Trabalho <span class="req">*</span></label>
+          <input type="text" id="newPortTitulo" class="form-input" required placeholder="Ex: Make Glam com Glitter">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label for="newPortCategoria" class="form-label">Categoria <span class="req">*</span></label>
+          <select id="newPortCategoria" class="form-select">
+            <option value="maquiagem">Maquiagem</option>
+            <option value="sobrancelhas">Sobrancelhas</option>
+            <option value="cilios">Extensão de Cílios</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label for="newPortRatio" class="form-label">Formato da Imagem <span class="req">*</span></label>
+          <select id="newPortRatio" class="form-select">
+            <option value="9:16">9:16 (Stories / Reels vertical)</option>
+            <option value="4:3">4:3 (Retrato tradicional / Câmera)</option>
+            <option value="1:1">1:1 (Quadrado estilo Feed)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label for="newPortUrl" class="form-label">URL da Imagem <span class="req">*</span></label>
+          <input type="text" id="newPortUrl" class="form-input" required placeholder="assets/portfolio/... ou link HTTPS">
+        </div>
+
+        <button type="submit" class="btn-cta-submit" style="width: 100%;">
+          <span>Cadastrar no Portfólio</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. Modal de Configurações do Supabase -->
+  <div id="supabaseSettingsModal" class="app-modal">
+    <div class="modal-content-card">
+      <button type="button" class="modal-close-btn" id="closeSettingsBtn">&times;</button>
+      <h3 class="step-card-title" style="margin-bottom: 0.5rem;">Configurações do Supabase</h3>
+      <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Insira a URL e Chave Anon do seu projeto Supabase para sincronização em nuvem. Se vazio, o sistema funciona perfeitamente com armazenamento local automático.
+      </p>
+
+      <form id="supabaseSettingsForm">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="settingSupabaseUrl" class="form-label">Supabase Project URL</label>
+          <input type="url" id="settingSupabaseUrl" class="form-input" placeholder="https://xyzcompany.supabase.co">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label for="settingSupabaseKey" class="form-label">Supabase Anon Key</label>
+          <input type="password" id="settingSupabaseKey" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        </div>
+
+        <button type="submit" class="btn-cta-submit" style="width: 100%;">
+          <span>Salvar Credenciais</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Flutuante de Notificação -->
+  <div id="appToast" class="app-toast"></div>
+
+  <!-- ==============================================================================
+       SCRIPTS DA APLICAÇÃO
+       ============================================================================== -->
+  <script src="./js/config.js"></script>
+  <script src="./js/supabaseClient.js"></script>
+  <script src="./js/charts.js"></script>
+  <script src="./js/portfolio.js"></script>
+  <script src="./js/booking.js"></script>
+  <script src="./js/admin.js"></script>
+
+  <!-- Controlador Geral de Visualização & PWA -->
+  <script>
+    class AppController {
+      constructor() {
+        this.currentView = 'booking'; // 'booking' ou 'admin'
+      }
+
+      async init() {
+        // Inicializa módulos
+        await window.DAIANE_BOOKING.init();
+        await window.DAIANE_PORTFOLIO.init();
+        await window.DAIANE_ADMIN.init();
+
+        // Checa se veio com hash #admin na URL
+        if (window.location.hash === '#admin') {
+          this.switchView('admin');
+        }
+
+        // Registra Service Worker se suportado
+        this.registerServiceWorker();
+      }
+
+      switchView(view) {
+        this.currentView = view;
+        const bookingSection = document.getElementById('clientBookingView');
+        const adminSection = document.getElementById('adminView');
+        const toggleIcon = document.getElementById('viewToggleIcon');
+        const toggleLabel = document.getElementById('viewToggleLabel');
+
+        if (view === 'admin') {
+          bookingSection.classList.remove('active');
+          adminSection.classList.add('active');
+          toggleIcon.textContent = '💄';
+          toggleLabel.textContent = 'Página do Cliente';
+          window.location.hash = 'admin';
+          if (window.DAIANE_ADMIN.isAuthenticated) {
+            window.DAIANE_ADMIN.loadAdminData();
+          }
+        } else {
+          adminSection.classList.remove('active');
+          bookingSection.classList.add('active');
+          toggleIcon.textContent = '✨';
+          toggleLabel.textContent = 'Painel da Daiane';
+          if (window.location.hash === '#admin') {
+            history.pushState(null, null, ' ');
+          }
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      toggleView() {
+        if (this.currentView === 'booking') {
+          this.switchView('admin');
+        } else {
+          this.switchView('booking');
+        }
+      }
+
+      registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(err => {
+              console.log('SW registration error:', err);
+            });
+          });
+        }
+      }
+    }
+
+    window.DAIANE_APP = new AppController();
+    document.addEventListener('DOMContentLoaded', () => {
+      window.DAIANE_APP.init();
+    });
+  </script>
+</body>
+</html>
