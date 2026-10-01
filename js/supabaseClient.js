@@ -5,10 +5,31 @@
 
 class DaianeDataProvider {
   constructor() {
-    this.config = window.DAIANE_CONFIG;
-    this.supabaseUrl = this.config.SUPABASE_URL;
-    this.supabaseKey = this.config.SUPABASE_ANON_KEY;
+    this.config = window.DAIANE_CONFIG || window.CONFIG;
+
+    // Assegura e força o banco oficial da Daiane
+    const officialUrl = 'https://bxgoiafsaddrqnisqvso.supabase.co';
+    const officialKey = 'sb_publishable_-bszqnx2p95TgYlYvo742A_Ub0PX_ar';
+
+    const storedUrl = (localStorage.getItem('DAIANE_SUPABASE_URL') || '').trim();
+    if (!storedUrl || storedUrl !== officialUrl) {
+      localStorage.setItem('DAIANE_SUPABASE_URL', officialUrl);
+      localStorage.setItem('DAIANE_SUPABASE_ANON_KEY', officialKey);
+      this.supabaseUrl = officialUrl;
+      this.supabaseKey = officialKey;
+    } else {
+      this.supabaseUrl = storedUrl;
+      this.supabaseKey = (localStorage.getItem('DAIANE_SUPABASE_ANON_KEY') || officialKey).trim();
+    }
+
     this.storageKey = 'DAIANE_BEAUTY_DB_V1';
+
+    // Log de inicialização do Supabase Oficial
+    if (this.isSupabaseConfigured() && this.supabaseUrl.includes('bxgoiafsaddrqnisqvso')) {
+      console.log('%c[Supabase] Conectado ao banco oficial da Daiane Stefani (bxgoiafsaddrqnisqvso)', 'color: #2b8a3e; font-weight: bold; font-size: 13px;');
+    } else {
+      console.log('[Supabase] Inicializado em modo de contingência local.');
+    }
 
     this.initLocalStorage();
   }
@@ -34,6 +55,30 @@ class DaianeDataProvider {
     this.supabaseKey = '';
     localStorage.removeItem('DAIANE_SUPABASE_URL');
     localStorage.removeItem('DAIANE_SUPABASE_ANON_KEY');
+  }
+
+  async resetToOfficialDefaults() {
+    const officialUrl = 'https://bxgoiafsaddrqnisqvso.supabase.co';
+    const officialKey = 'sb_publishable_-bszqnx2p95TgYlYvo742A_Ub0PX_ar';
+
+    localStorage.setItem('DAIANE_SUPABASE_URL', officialUrl);
+    localStorage.setItem('DAIANE_SUPABASE_ANON_KEY', officialKey);
+    localStorage.removeItem('DAIANE_BEAUTY_DB_V1');
+    localStorage.removeItem('JR_BARBEARIA_DB_V1');
+    localStorage.removeItem('JR_SUPABASE_URL');
+    localStorage.removeItem('JR_SUPABASE_ANON_KEY');
+    sessionStorage.clear();
+
+    if ('caches' in window) {
+      try {
+        const cacheKeys = await window.caches.keys();
+        await Promise.all(cacheKeys.map(k => window.caches.delete(k)));
+      } catch (err) {
+        console.warn('Erro ao limpar cache:', err);
+      }
+    }
+
+    window.location.reload();
   }
 
   // ============================================================================

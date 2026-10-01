@@ -3,14 +3,40 @@
  * Configuração Global do Sistema
  */
 
+// ============================================================================
+// VALIDAÇÃO & FORÇAMENTO DAS CREDENCIAIS OFICIAIS DO SUPABASE
+// ============================================================================
+const OFFICIAL_SUPABASE_URL = 'https://bxgoiafsaddrqnisqvso.supabase.co';
+const OFFICIAL_SUPABASE_ANON_KEY = 'sb_publishable_-bszqnx2p95TgYlYvo742A_Ub0PX_ar';
+const OFFICIAL_WHATSAPP_NUMBER = '5532984561005';
+const OFFICIAL_WHATSAPP_FORMATTED = '(32) 98456-1005';
+
+// Higienização automática de chaves antigas ou de teste que possam ter ficado no navegador
+(function sanitizeLegacyStorage() {
+  try {
+    const storedUrl = (localStorage.getItem('DAIANE_SUPABASE_URL') || '').trim();
+    // Se estiver vazio, for de outro projeto (ex: barbearia, placeholder) ou diferente do oficial da Daiane:
+    if (!storedUrl || storedUrl !== OFFICIAL_SUPABASE_URL) {
+      localStorage.setItem('DAIANE_SUPABASE_URL', OFFICIAL_SUPABASE_URL);
+      localStorage.setItem('DAIANE_SUPABASE_ANON_KEY', OFFICIAL_SUPABASE_ANON_KEY);
+    }
+
+    // Limpeza de chaves residuais de outros testes
+    const legacyKeys = ['JR_SUPABASE_URL', 'JR_SUPABASE_ANON_KEY', 'JR_BARBEARIA_DB_V1'];
+    legacyKeys.forEach(k => localStorage.removeItem(k));
+  } catch (e) {
+    console.warn('Erro ao inicializar storage seguro:', e);
+  }
+})();
+
 const CONFIG = {
   // Conexão Oficial com o Supabase da Daiane
-  SUPABASE_URL: (localStorage.getItem('DAIANE_SUPABASE_URL') || '').trim() || 'https://bxgoiafsaddrqnisqvso.supabase.co',
-  SUPABASE_ANON_KEY: (localStorage.getItem('DAIANE_SUPABASE_ANON_KEY') || '').trim() || 'sb_publishable_-bszqnx2p95TgYlYvo742A_Ub0PX_ar',
+  SUPABASE_URL: OFFICIAL_SUPABASE_URL,
+  SUPABASE_ANON_KEY: OFFICIAL_SUPABASE_ANON_KEY,
   
   // WhatsApp oficial para envio automático e obrigatório
-  WHATSAPP_NUMBER: '5532984561005',
-  WHATSAPP_NUMBER_FORMATTED: '(32) 98456-1005',
+  WHATSAPP_NUMBER: OFFICIAL_WHATSAPP_NUMBER,
+  WHATSAPP_NUMBER_FORMATTED: OFFICIAL_WHATSAPP_FORMATTED,
 
   // Identidade do Studio
   STUDIO: {
@@ -20,8 +46,8 @@ const CONFIG = {
     avatar: './assets/daiane.jpg',
     defaultLogin: 'daiane',
     defaultSenha: 'Daiane123',
-    whatsapp: '5532984561005',
-    whatsappFormatted: '(32) 98456-1005',
+    whatsapp: OFFICIAL_WHATSAPP_NUMBER,
+    whatsappFormatted: OFFICIAL_WHATSAPP_FORMATTED,
     instagram: '@daianestefanibeauty',
     address: 'Studio Daiane Stefani - Atendimento com hora marcada',
     timezone: 'America/Sao_Paulo'
