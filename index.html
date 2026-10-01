@@ -21,6 +21,9 @@
   <!-- Estilos Globais -->
   <link rel="stylesheet" href="./css/styles.css">
 
+  <!-- Supabase JS SDK CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 </head>
@@ -635,13 +638,41 @@
           </select>
         </div>
 
+        <!-- Seleção de Foto do Dispositivo & Pré-visualização -->
         <div class="form-group" style="margin-bottom: 1.25rem;">
-          <label for="newPortUrl" class="form-label">URL da Imagem <span class="req">*</span></label>
-          <input type="text" id="newPortUrl" class="form-input" required placeholder="assets/portfolio/... ou link HTTPS">
+          <label class="form-label">Foto do Trabalho <span class="req">*</span></label>
+          
+          <input type="file" id="newPortFileInput" accept="image/*" style="display: none;">
+
+          <!-- Botão / Área de Arrastar e Selecionar Foto -->
+          <div id="portfolioUploadDropzone" class="upload-dropzone">
+            <div class="dropzone-icon">📸</div>
+            <div class="dropzone-text">
+              <strong>Selecionar Foto do Dispositivo</strong>
+              <span>Toque para escolher da galeria ou câmera (PNG, JPG, WebP)</span>
+            </div>
+          </div>
+
+          <!-- Prévia da Imagem Selecionada -->
+          <div id="portfolioPreviewArea" class="upload-preview-area" style="display: none;">
+            <div class="preview-img-container ratio-9-16" id="previewImgContainer">
+              <img id="portfolioPreviewImg" src="" alt="Prévia da foto">
+              <button type="button" class="btn-remove-preview" id="btnRemovePreview" title="Remover imagem selecionada">&times;</button>
+            </div>
+            <div class="preview-meta-info">
+              <div class="preview-file-details">
+                <span id="previewFileName" class="preview-file-name">foto.jpg</span>
+                <span id="previewFileSize" class="preview-file-size">0 KB</span>
+              </div>
+              <button type="button" class="btn-change-photo" id="btnChangePhoto">
+                🔄 Trocar Foto
+              </button>
+            </div>
+          </div>
         </div>
 
-        <button type="submit" class="btn-cta-submit" style="width: 100%;">
-          <span>Cadastrar no Portfólio</span>
+        <button type="submit" id="btnSubmitPortfolio" class="btn-cta-submit" style="width: 100%;">
+          <span id="btnSubmitPortfolioText">Publicar no Portfólio</span>
         </button>
       </form>
     </div>

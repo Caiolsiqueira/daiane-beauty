@@ -23,6 +23,7 @@ class DaianeDataProvider {
     }
 
     this.storageKey = 'DAIANE_BEAUTY_DB_V1';
+    this._supabaseClient = null;
 
     // Log de inicialização do Supabase Oficial
     if (this.isSupabaseConfigured() && this.supabaseUrl.includes('bxgoiafsaddrqnisqvso')) {
@@ -32,6 +33,17 @@ class DaianeDataProvider {
     }
 
     this.initLocalStorage();
+  }
+
+  getSupabaseClient() {
+    if (!this._supabaseClient && window.supabase && this.isSupabaseConfigured()) {
+      try {
+        this._supabaseClient = window.supabase.createClient(this.supabaseUrl, this.supabaseKey);
+      } catch (e) {
+        console.warn('Erro ao inicializar Supabase SDK client:', e);
+      }
+    }
+    return this._supabaseClient;
   }
 
   isSupabaseConfigured() {
@@ -46,6 +58,7 @@ class DaianeDataProvider {
   setCredentials(url, key) {
     this.supabaseUrl = (url || '').trim();
     this.supabaseKey = (key || '').trim();
+    this._supabaseClient = null;
     localStorage.setItem('DAIANE_SUPABASE_URL', this.supabaseUrl);
     localStorage.setItem('DAIANE_SUPABASE_ANON_KEY', this.supabaseKey);
   }
@@ -53,6 +66,7 @@ class DaianeDataProvider {
   clearCredentials() {
     this.supabaseUrl = '';
     this.supabaseKey = '';
+    this._supabaseClient = null;
     localStorage.removeItem('DAIANE_SUPABASE_URL');
     localStorage.removeItem('DAIANE_SUPABASE_ANON_KEY');
   }
@@ -605,6 +619,94 @@ class DaianeDataProvider {
     return list;
   }
 
+  /**
+   * Upload de imagem para o bucket 'portfolio' do Supabase Storage
+   * com fallback transparente para Base64 local caso haja erro ou offline
+   */
+  async uploadPortfolioImage(file) {
+    if (!file) {
+      throw new Error('Nenhum arquivo de imagem foi selecionado.');
+    }
+
+    // Sanitiza e gera nome único para o arquivo
+    const originalName = file.name || 'foto.jpg';
+    const lastDotIndex = originalName.lastIndexOf('.');
+    const ext = lastDotIndex !== -1 ? originalName.substring(lastDotIndex).toLowerCase() : '.jpg';
+    const rawBaseName = lastDotIndex !== -1 ? originalName.substring(0, lastDotIndex) : originalName;
+    const cleanBaseName = rawBaseName.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 40);
+    const uniqueFileName = `${Date.now()}_${cleanBaseName}${ext}`;
+
+    // 1. Tenta envio pelo Supabase Storage SDK
+    const client = this.getSupabaseClient();
+    if (client && this.isSupabaseConfigured()) {
+      try {
+        console.log(`[Supabase Storage] Enviando arquivo ${uniqueFileName} (${file.size} bytes)...`);
+        const { data, error } = await client.storage
+          .from('portfolio')
+          .upload(uniqueFileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (!error && data) {
+          const { data: publicUrlData } = client.storage
+            .from('portfolio')
+            .getPublicUrl(uniqueFileName);
+
+          if (publicUrlData && publicUrlData.publicUrl) {
+            console.log('%c[Supabase Storage] Upload concluído com sucesso!', 'color: #2b8a3e; font-weight: bold;', publicUrlData.publicUrl);
+            return {
+              url: publicUrlData.publicUrl,
+              fileName: uniqueFileName,
+              storage: 'supabase',
+              success: true
+            };
+          }
+        } else {
+          console.warn('[Supabase Storage] Erro no upload:', error ? (error.message || error) : 'Sem dados retornados');
+        }
+      } catch (err) {
+        console.warn('[Supabase Storage] Exceção durante upload (ativando fallback local):', err);
+      }
+    }
+
+    // 2. Fallback Local: Converte arquivo em Base64 DataURL
+    console.log('[Supabase Storage] Ativando fallback local para Base64...');
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve({
+          url: reader.result,
+          fileName: uniqueFileName,
+          storage: 'local_base64',
+          success: true
+        });
+      };
+      reader.onerror = (e) => {
+        reject(new Error('Erro ao ler imagem localmente: ' + (e.message || e)));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async deletePortfolioImageFromStorage(imageUrl) {
+    if (!imageUrl || typeof imageUrl !== 'string') return;
+
+    const bucketMarker = '/storage/v1/object/public/portfolio/';
+    if (imageUrl.includes(bucketMarker)) {
+      const fileName = imageUrl.substring(imageUrl.indexOf(bucketMarker) + bucketMarker.length).split('?')[0];
+      const client = this.getSupabaseClient();
+      if (client && fileName) {
+        try {
+          await client.storage.from('portfolio').remove([fileName]);
+          console.log('[Supabase Storage] Arquivo removido do bucket:', fileName);
+        } catch (err) {
+          console.warn('[Supabase Storage] Falha ao remover arquivo do bucket:', err);
+        }
+      }
+    }
+  }
+
   async addPortfolioItem(item) {
     const newItem = {
       id: 'port-' + Date.now(),
@@ -616,6 +718,7 @@ class DaianeDataProvider {
     };
 
     const db = this.getLocalDb();
+    db.portfolio = db.portfolio || [];
     db.portfolio.unshift(newItem);
     this.saveLocalDb(db);
 
@@ -626,7 +729,8 @@ class DaianeDataProvider {
           headers: {
             'apikey': this.supabaseKey,
             'Authorization': `Bearer ${this.supabaseKey}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
           },
           body: JSON.stringify(newItem)
         });
@@ -640,7 +744,12 @@ class DaianeDataProvider {
 
   async deletePortfolioItem(id) {
     const db = this.getLocalDb();
-    db.portfolio = db.portfolio.filter(p => p.id !== id);
+    const existing = (db.portfolio || []).find(p => p.id === id);
+    if (existing && existing.imagem_url) {
+      await this.deletePortfolioImageFromStorage(existing.imagem_url);
+    }
+
+    db.portfolio = (db.portfolio || []).filter(p => p.id !== id);
     this.saveLocalDb(db);
 
     if (this.isSupabaseConfigured()) {

@@ -11,6 +11,7 @@ class DaianeAdmin {
     this.agendaStatusFilter = 'todos';
     this.dashboardPeriod = 'mes';
     this.chartMode = 'faturamento'; // 'faturamento' ou 'atendimentos'
+    this.selectedPortfolioFile = null;
   }
 
   getTodayDateString() {
@@ -156,9 +157,15 @@ class DaianeAdmin {
     const portfolioModal = document.getElementById('addPortfolioModal');
     const closePortfolioModalBtn = document.getElementById('closeAddPortfolioBtn');
     const portfolioForm = document.getElementById('addPortfolioForm');
+    const fileInput = document.getElementById('newPortFileInput');
+    const dropzone = document.getElementById('portfolioUploadDropzone');
+    const btnRemovePreview = document.getElementById('btnRemovePreview');
+    const btnChangePhoto = document.getElementById('btnChangePhoto');
+    const selectRatio = document.getElementById('newPortRatio');
 
     if (btnOpenPortfolioModal && portfolioModal) {
       btnOpenPortfolioModal.addEventListener('click', () => {
+        this.resetPortfolioForm();
         portfolioModal.classList.add('active');
         document.body.classList.add('modal-open');
       });
@@ -166,8 +173,55 @@ class DaianeAdmin {
 
     if (portfolioModal && closePortfolioModalBtn) {
       closePortfolioModalBtn.addEventListener('click', () => {
+        this.resetPortfolioForm();
         portfolioModal.classList.remove('active');
         document.body.classList.remove('modal-open');
+      });
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          this.handleFileSelect(e.target.files[0]);
+        }
+      });
+    }
+
+    if (dropzone) {
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('dragover');
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          this.handleFileSelect(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    if (btnRemovePreview) {
+      btnRemovePreview.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.resetPortfolioPreview();
+      });
+    }
+
+    if (btnChangePhoto && fileInput) {
+      btnChangePhoto.addEventListener('click', () => {
+        fileInput.click();
+      });
+    }
+
+    if (selectRatio) {
+      selectRatio.addEventListener('change', (e) => {
+        this.updatePreviewAspectRatio(e.target.value);
       });
     }
 
@@ -588,34 +642,109 @@ class DaianeAdmin {
   }
 
   // ============================================================================
-  // 4. GESTÃO DO PORTFÓLIO NO ADMIN
+  // 4. GESTÃO DO PORTFÓLIO NO ADMIN & UPLOAD DE FOTOS DO DISPOSITIVO
   // ============================================================================
+  handleFileSelect(file) {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor, selecione um arquivo de imagem válido (JPG, PNG, WebP).');
+      return;
+    }
+
+    this.selectedPortfolioFile = file;
+
+    const dropzone = document.getElementById('portfolioUploadDropzone');
+    const previewArea = document.getElementById('portfolioPreviewArea');
+    const previewImg = document.getElementById('portfolioPreviewImg');
+    const fileNameEl = document.getElementById('previewFileName');
+    const fileSizeEl = document.getElementById('previewFileSize');
+    const ratioSelect = document.getElementById('newPortRatio');
+
+    if (fileNameEl) fileNameEl.textContent = file.name;
+    if (fileSizeEl) {
+      const kb = (file.size / 1024).toFixed(1);
+      fileSizeEl.textContent = `${kb} KB`;
+    }
+
+    // Leitura e exibição da pré-visualização instantânea
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (previewImg) previewImg.src = e.target.result;
+      if (dropzone) dropzone.style.display = 'none';
+      if (previewArea) previewArea.style.display = 'flex';
+      if (ratioSelect) this.updatePreviewAspectRatio(ratioSelect.value);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  updatePreviewAspectRatio(ratio) {
+    const container = document.getElementById('previewImgContainer');
+    if (!container) return;
+    container.classList.remove('ratio-9-16', 'ratio-4-3', 'ratio-1-1');
+    if (ratio === '9:16') container.classList.add('ratio-9-16');
+    else if (ratio === '4:3') container.classList.add('ratio-4-3');
+    else if (ratio === '1:1') container.classList.add('ratio-1-1');
+  }
+
+  resetPortfolioPreview() {
+    this.selectedPortfolioFile = null;
+    const fileInput = document.getElementById('newPortFileInput');
+    if (fileInput) fileInput.value = '';
+
+    const dropzone = document.getElementById('portfolioUploadDropzone');
+    const previewArea = document.getElementById('portfolioPreviewArea');
+    const previewImg = document.getElementById('portfolioPreviewImg');
+
+    if (previewImg) previewImg.src = '';
+    if (previewArea) previewArea.style.display = 'none';
+    if (dropzone) dropzone.style.display = 'flex';
+  }
+
+  resetPortfolioForm() {
+    const form = document.getElementById('addPortfolioForm');
+    if (form) form.reset();
+    this.resetPortfolioPreview();
+  }
+
   async loadAdminPortfolio() {
     const grid = document.getElementById('adminPortfolioGrid');
     if (!grid) return;
 
-    grid.innerHTML = '<div class="loading-state">Carregando itens...</div>';
+    grid.innerHTML = '<div class="loading-state">Carregando fotos...</div>';
 
     try {
       const items = await window.DAIANE_DB.getPortfolio('todos');
 
       if (items.length === 0) {
-        grid.innerHTML = '<p>Nenhum item cadastrado no portfólio.</p>';
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary); background: #ffffff; border-radius: var(--radius-md); border: 1.5px dashed var(--border-light);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🖼️</div>
+            <h4 style="color: var(--primary-wine); margin-bottom: 0.25rem;">Nenhum trabalho no portfólio</h4>
+            <p style="font-size: 0.88rem;">Clique no botão "+ Adicionar Trabalho" acima para enviar sua primeira foto da galeria ou câmera.</p>
+          </div>
+        `;
         return;
       }
 
+      const catLabels = {
+        maquiagem: 'Maquiagem',
+        sobrancelhas: 'Sobrancelhas',
+        cilios: 'Cílios'
+      };
+
       grid.innerHTML = items.map(item => `
-        <div class="admin-portfolio-card">
+        <div class="admin-portfolio-card" data-id="${item.id}">
           <div class="admin-port-thumb">
-            <img src="${item.imagem_url}" alt="${item.titulo}" onerror="this.src='assets/daiane.jpg'">
+            <img src="${item.imagem_url}" alt="${item.titulo}" loading="lazy" onerror="this.src='assets/daiane.jpg'">
             <span class="admin-port-ratio">${item.aspect_ratio}</span>
           </div>
           <div class="admin-port-info">
             <h5>${item.titulo}</h5>
-            <span class="admin-port-cat">${item.categoria}</span>
+            <span class="admin-port-cat">${catLabels[item.categoria] || item.categoria}</span>
           </div>
-          <button type="button" class="btn-delete-port" onclick="window.DAIANE_ADMIN.deletePortfolioItem('${item.id}')" title="Excluir item">
-            🗑️ Excluir
+          <button type="button" class="btn-delete-port" onclick="window.DAIANE_ADMIN.deletePortfolioItem('${item.id}')" title="Excluir foto">
+            🗑️ Excluir Foto
           </button>
         </div>
       `).join('');
@@ -627,29 +756,54 @@ class DaianeAdmin {
 
   async handleAddPortfolioSubmit(e) {
     e.preventDefault();
+
+    if (!this.selectedPortfolioFile) {
+      this.showToast('Por favor, selecione uma foto do seu dispositivo.', 'error');
+      return;
+    }
+
     const titulo = document.getElementById('newPortTitulo').value.trim();
     const categoria = document.getElementById('newPortCategoria').value;
-    const url = document.getElementById('newPortUrl').value.trim();
     const ratio = document.getElementById('newPortRatio').value;
 
+    const btnSubmit = document.getElementById('btnSubmitPortfolio');
+    const btnText = document.getElementById('btnSubmitPortfolioText');
+
     try {
+      if (btnSubmit) btnSubmit.disabled = true;
+      if (btnText) btnText.innerHTML = '⏳ Enviando foto...';
+
+      // 1. Upload para o Supabase Storage (com fallback Base64 se offline/erro)
+      const uploadResult = await window.DAIANE_DB.uploadPortfolioImage(this.selectedPortfolioFile);
+
+      // 2. Registro do trabalho no banco
       await window.DAIANE_DB.addPortfolioItem({
         titulo,
         categoria,
-        imagem_url: url,
+        imagem_url: uploadResult.url,
         aspect_ratio: ratio
       });
 
-      this.showToast('Item adicionado ao portfólio com sucesso!', 'success');
+      const msgSuccess = uploadResult.storage === 'supabase'
+        ? 'Foto publicada e sincronizada na nuvem com sucesso!'
+        : 'Foto adicionada ao portfólio com sucesso!';
+      this.showToast(msgSuccess, 'success');
+
+      // Fecha o modal e limpa estado
       const modal = document.getElementById('addPortfolioModal');
       if (modal) modal.classList.remove('active');
       document.body.classList.remove('modal-open');
+      this.resetPortfolioForm();
 
-      document.getElementById('addPortfolioForm').reset();
+      // Recarrega o portfólio no admin e na página pública
       await this.loadAdminPortfolio();
       await window.DAIANE_PORTFOLIO.loadGallery();
     } catch (err) {
-      alert(err.message || 'Erro ao adicionar item.');
+      console.error('Erro ao adicionar foto:', err);
+      alert(err.message || 'Erro ao processar imagem.');
+    } finally {
+      if (btnSubmit) btnSubmit.disabled = false;
+      if (btnText) btnText.textContent = 'Publicar no Portfólio';
     }
   }
 
@@ -658,11 +812,12 @@ class DaianeAdmin {
 
     try {
       await window.DAIANE_DB.deletePortfolioItem(id);
-      this.showToast('Item removido com sucesso.', 'info');
+      this.showToast('Foto removida do portfólio com sucesso.', 'info');
       await this.loadAdminPortfolio();
       await window.DAIANE_PORTFOLIO.loadGallery();
     } catch (err) {
-      alert(err.message || 'Erro ao deletar item.');
+      console.error('Erro ao excluir foto:', err);
+      alert(err.message || 'Erro ao excluir item.');
     }
   }
 

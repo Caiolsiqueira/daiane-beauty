@@ -3,7 +3,7 @@
  * Service Worker para funcionamento offline e instalação PWA
  */
 
-const CACHE_NAME = 'daiane-beauty-cache-v5';
+const CACHE_NAME = 'daiane-beauty-cache-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

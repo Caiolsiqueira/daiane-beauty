@@ -115,3 +115,28 @@ CREATE POLICY "Portfolio leitura pública" ON portfolio FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Portfolio modificação" ON portfolio;
 CREATE POLICY "Portfolio modificação" ON portfolio FOR ALL USING (true);
+
+-- ------------------------------------------------------------------------------
+-- 6. SUPABASE STORAGE: BUCKET 'portfolio'
+-- Armazenamento em nuvem de fotos de maquiagem, sobrancelhas e cílios
+-- ------------------------------------------------------------------------------
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('portfolio', 'portfolio', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Políticas de acesso ao storage para o bucket 'portfolio'
+DROP POLICY IF EXISTS "Portfolio bucket leitura pública" ON storage.objects;
+CREATE POLICY "Portfolio bucket leitura pública" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'portfolio');
+
+DROP POLICY IF EXISTS "Portfolio bucket upload público" ON storage.objects;
+CREATE POLICY "Portfolio bucket upload público" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id = 'portfolio');
+
+DROP POLICY IF EXISTS "Portfolio bucket exclusão pública" ON storage.objects;
+CREATE POLICY "Portfolio bucket exclusão pública" 
+ON storage.objects FOR DELETE 
+USING (bucket_id = 'portfolio');
+
