@@ -1638,6 +1638,28 @@ a {
   margin-bottom: 1.5rem;
 }
 
+.redirect-alert-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #ebfbee;
+  color: #2b8a3e;
+  border: 1px solid #b2f2bb;
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  margin-top: 0.65rem;
+  animation: pulseGlow 1.8s infinite;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(43, 138, 62, 0.4); }
+  70% { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(43, 138, 62, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(43, 138, 62, 0); }
+}
+
 .conf-check-icon {
   width: 64px;
   height: 64px;

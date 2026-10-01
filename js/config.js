@@ -4,6 +4,10 @@
  */
 
 const DAIANE_CONFIG = {
+  // Número de destino oficial para envio obrigatório via WhatsApp
+  WHATSAPP_NUMBER: '5532984561005',
+  WHATSAPP_NUMBER_FORMATTED: '(32) 98456-1005',
+
   // Configuração Supabase (permite preenchimento via painel ou variáveis)
   SUPABASE_URL: (localStorage.getItem('DAIANE_SUPABASE_URL') || '').trim(),
   SUPABASE_ANON_KEY: (localStorage.getItem('DAIANE_SUPABASE_ANON_KEY') || '').trim(),
@@ -16,7 +20,7 @@ const DAIANE_CONFIG = {
     avatar: './assets/daiane.jpg',
     defaultLogin: 'daiane',
     defaultSenha: 'Daiane123',
-    whatsapp: '32984561005',
+    whatsapp: '5532984561005',
     whatsappFormatted: '(32) 98456-1005',
     instagram: '@daianestefanibeauty',
     address: 'Studio Daiane Stefani - Atendimento com hora marcada',

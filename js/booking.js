@@ -10,6 +10,7 @@ class DaianeBooking {
     this.selectedSlot = null;
     this.services = [];
     this.lastCreatedAppointment = null;
+    this.redirectTimer = null;
   }
 
   async init() {
@@ -36,19 +37,23 @@ class DaianeBooking {
     const closeBtn = document.getElementById('closeConfirmationBtn');
     if (modal && closeBtn) {
       closeBtn.addEventListener('click', () => {
+        if (this.redirectTimer) clearTimeout(this.redirectTimer);
         modal.classList.remove('active');
         document.body.classList.remove('modal-open');
       });
     }
 
-    // Ações do modal de confirmação
-    const btnWhatsapp = document.getElementById('btnConfirmWhatsapp');
+    const btnDirectWa = document.getElementById('btnDirectWhatsappLink');
+    if (btnDirectWa) {
+      btnDirectWa.addEventListener('click', () => {
+        if (this.redirectTimer) clearTimeout(this.redirectTimer);
+      });
+    }
+
+    // Ações complementares do modal de confirmação
     const btnGCal = document.getElementById('btnGoogleCalendar');
     const btnIcs = document.getElementById('btnDownloadIcs');
 
-    if (btnWhatsapp) {
-      btnWhatsapp.addEventListener('click', () => this.sendWhatsAppConfirmation());
-    }
     if (btnGCal) {
       btnGCal.addEventListener('click', () => this.addToGoogleCalendar());
     }
@@ -424,8 +429,29 @@ class DaianeBooking {
   }
 
   // ============================================================================
-  // MODAL DE CONFIRMAÇÃO & AÇÕES (WHATSAPP, GOOGLE CALENDAR, .ICS)
+  // MODAL DE CONFIRMAÇÃO & REDIRECIONAMENTO AUTOMÁTICO WHATSAPP
   // ============================================================================
+  generateWhatsAppUrl(apt) {
+    // 1. Obtém o número configurável no config.js (ex: 5532984561005)
+    let destNumber = window.DAIANE_CONFIG.WHATSAPP_NUMBER || window.DAIANE_CONFIG.STUDIO.whatsapp || '5532984561005';
+    let cleanNumber = String(destNumber).replace(/\D/g, '');
+    if (!cleanNumber.startsWith('55')) {
+      cleanNumber = '55' + cleanNumber;
+    }
+
+    // 2. Mensagem pré-formatada amigável exigida
+    const msg =
+      `Olá Daiane! Acabei de agendar meu horário pelo site e gostaria de confirmar:\n\n` +
+      `✨ *Cliente:* ${apt.cliente_nome}\n` +
+      `💄 *Serviço:* ${apt.servicoNome}\n` +
+      `📅 *Data:* ${this.formatDateBR(apt.data)}\n` +
+      `⏰ *Horário:* ${apt.horario}\n` +
+      `💰 *Valor:* ${apt.valorCobradoFormatado}\n\n` +
+      `Aguardo sua confirmação. Muito obrigada!`;
+
+    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(msg)}`;
+  }
+
   showConfirmationModal() {
     const apt = this.lastCreatedAppointment;
     if (!apt) return;
@@ -436,6 +462,8 @@ class DaianeBooking {
     const modalData = document.getElementById('modalConfData');
     const modalHorario = document.getElementById('modalConfHorario');
     const modalValor = document.getElementById('modalConfValor');
+    const btnDirectWa = document.getElementById('btnDirectWhatsappLink');
+    const redirectBadge = document.getElementById('modalRedirectMessage');
 
     if (modalNome) modalNome.textContent = apt.cliente_nome;
     if (modalServico) modalServico.textContent = apt.servicoNome;
@@ -443,38 +471,27 @@ class DaianeBooking {
     if (modalHorario) modalHorario.textContent = `${apt.horario} (Duração: 30 min)`;
     if (modalValor) modalValor.textContent = apt.valorCobradoFormatado;
 
+    // Gera o link oficial do WhatsApp
+    const whatsappUrl = this.generateWhatsAppUrl(apt);
+
+    if (btnDirectWa) {
+      btnDirectWa.href = whatsappUrl;
+    }
+
+    if (redirectBadge) {
+      redirectBadge.innerHTML = `<span>📲 Agendamento registrado! Redirecionando para o WhatsApp...</span>`;
+    }
+
     if (modal) {
       modal.classList.add('active');
       document.body.classList.add('modal-open');
     }
-  }
 
-  async sendWhatsAppConfirmation() {
-    const apt = this.lastCreatedAppointment;
-    if (!apt) return;
-
-    let daianePhone = window.DAIANE_CONFIG.STUDIO.whatsapp || '32984561005';
-    try {
-      const profile = await window.DAIANE_DB.getProfessionalProfile();
-      if (profile && profile.telefone_whatsapp) {
-        daianePhone = profile.telefone_whatsapp;
-      }
-    } catch (e) {}
-
-    const cleanPhone = String(daianePhone).replace(/\D/g, '');
-    const phoneWithCountry = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
-
-    const msg = `Olá Daiane! Acabei de agendar um atendimento no Studio & Beauty:\n\n` +
-      `✨ *Cliente:* ${apt.cliente_nome}\n` +
-      `💄 *Serviço:* ${apt.servicoNome}\n` +
-      `📅 *Data:* ${this.formatDateBR(apt.data)}\n` +
-      `⏰ *Horário:* ${apt.horario}\n` +
-      `💰 *Valor:* ${apt.valorCobradoFormatado}\n\n` +
-      `Aguardo sua confirmação. Muito obrigada!`;
-
-    const encodedMsg = encodeURIComponent(msg);
-    const url = `https://wa.me/${phoneWithCountry}?text=${encodedMsg}`;
-    window.open(url, '_blank');
+    // REDIRECIONAMENTO AUTOMÁTICO E OBRIGATÓRIO (após 1.2 segundos para feedback visual)
+    if (this.redirectTimer) clearTimeout(this.redirectTimer);
+    this.redirectTimer = setTimeout(() => {
+      window.location.href = whatsappUrl;
+    }, 1200);
   }
 
   addToGoogleCalendar() {
