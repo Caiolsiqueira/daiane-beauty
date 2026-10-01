@@ -3,14 +3,14 @@
  * Configuração Global do Sistema
  */
 
-const DAIANE_CONFIG = {
-  // Número de destino oficial para envio obrigatório via WhatsApp
+const CONFIG = {
+  // Conexão Oficial com o Supabase da Daiane
+  SUPABASE_URL: (localStorage.getItem('DAIANE_SUPABASE_URL') || '').trim() || 'https://bxgoiafsaddrqnisqvso.supabase.co',
+  SUPABASE_ANON_KEY: (localStorage.getItem('DAIANE_SUPABASE_ANON_KEY') || '').trim() || 'sb_publishable_-bszqnx2p95TgYlYvo742A_Ub0PX_ar',
+  
+  // WhatsApp oficial para envio automático e obrigatório
   WHATSAPP_NUMBER: '5532984561005',
   WHATSAPP_NUMBER_FORMATTED: '(32) 98456-1005',
-
-  // Configuração Supabase (permite preenchimento via painel ou variáveis)
-  SUPABASE_URL: (localStorage.getItem('DAIANE_SUPABASE_URL') || '').trim(),
-  SUPABASE_ANON_KEY: (localStorage.getItem('DAIANE_SUPABASE_ANON_KEY') || '').trim(),
 
   // Identidade do Studio
   STUDIO: {
@@ -172,4 +172,6 @@ const DAIANE_CONFIG = {
   }
 };
 
-window.DAIANE_CONFIG = DAIANE_CONFIG;
+const DAIANE_CONFIG = CONFIG;
+window.CONFIG = CONFIG;
+window.DAIANE_CONFIG = CONFIG;

@@ -89,7 +89,8 @@ DROP POLICY IF EXISTS "Perfil leitura pública" ON perfil_profissional;
 CREATE POLICY "Perfil leitura pública" ON perfil_profissional FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Perfil atualização" ON perfil_profissional;
-CREATE POLICY "Perfil atualização" ON perfil_profissional FOR UPDATE USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Perfil modificação" ON perfil_profissional;
+CREATE POLICY "Perfil modificação" ON perfil_profissional FOR ALL USING (true) WITH CHECK (true);
 
 -- Serviços: leitura pública e atualização permitida
 DROP POLICY IF EXISTS "Serviços leitura pública" ON servicos;
